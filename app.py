@@ -206,31 +206,46 @@ def get_recommendations(title):
         return 'Sorry! try another movie name'
 
     idx = df[df['title'] == title].index[0]
-    sim_scores = list(enumerate(cosine_sim[idx]))
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    sim_scores = sim_scores[1:6]  # higher 5 results
-    movie_indices = [i[0] for i in sim_scores]
-    recommended_movies = []
 
-    for movie_index in movie_indices:
-        movie_id = df['title'].iloc[movie_index]
-        movie_details = get_movie_details(movie_id)
+    try:
+        # Check if cosine_sim is still None
+        if cosine_sim is None:
+            st.error("Cosine similarity matrix is not available.")
+            return []
+        sim_scores = list(enumerate(cosine_sim[idx]))
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+        sim_scores = sim_scores[1:6]  # higher 5 results
+        movie_indices = [i[0] for i in sim_scores]
+        recommended_movies = []
 
-        if movie_details:
-            # Round the rating to one decimal place
-            vote_average = movie_details.get('vote_average', 0)
-            rounded_vote_average = round(vote_average, 1) if isinstance(vote_average, (int, float)) else vote_average
+        for movie_index in movie_indices:
+            movie_id = df['title'].iloc[movie_index]
+            movie_details = get_movie_details(movie_id)
 
-            recommended_movies.append({
-                'title': movie_details.get('title', ''),
-                "poster_path": movie_details.get('poster_path', ''),
-                "overview": movie_details.get('overview', ''),
-                "rating": movie_details.get('rating', ''),
-                "release_date": movie_details.get('release_date', ''),
-                "vote_average": rounded_vote_average,
-                "vote_count": movie_details.get('vote_count', ''),
-            })
-    return recommended_movies
+            if movie_details:
+                # Round the rating to one decimal place
+                vote_average = movie_details.get('vote_average', 0)
+                rounded_vote_average = round(vote_average, 1) if isinstance(vote_average, (int, float)) else vote_average
+
+                recommended_movies.append({
+                    'title': movie_details.get('title', ''),
+                    "poster_path": movie_details.get('poster_path', ''),
+                    "overview": movie_details.get('overview', ''),
+                    "rating": movie_details.get('rating', ''),
+                    "release_date": movie_details.get('release_date', ''),
+                    "vote_average": rounded_vote_average,
+                    "vote_count": movie_details.get('vote_count', ''),
+                })
+        return recommended_movies
+    except Exception as e:
+        st.error(f"Error generating recommendations: {str(e)}")
+        return []
+
+
+
+
+
+
 
 def get_movie_details(movie_name):
     url = f"{BASE_URL}/search/movie?api_key={API_KEY}&query={movie_name}"
