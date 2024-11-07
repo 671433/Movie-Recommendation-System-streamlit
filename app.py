@@ -306,6 +306,7 @@ def main():
         st.error("Failed to load necessary data. Please try again later.")
         return
 
+
     load_data()
 
     # Custom CSS
