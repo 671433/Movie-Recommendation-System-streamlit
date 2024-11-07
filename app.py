@@ -159,7 +159,33 @@ def load_data():
 
             # Calculate cosine similarity
             st.info("Calculating similarity matrix... This might take a moment.")
-            cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+
+            # Ensure the tfidf_matrix is not empty
+            if tfidf_matrix.shape[0] == 0:
+                raise ValueError("TF-IDF matrix is empty, check the input data.")
+
+            # Initialize cosine similarity matrix
+            chunk_size = 500
+            n_chunks = len(df) // chunk_size + 1
+            cosine_sim = np.zeros((len(df), len(df)), dtype='float32')
+
+            # Loop through the data in chunks
+            for i in range(n_chunks):
+                start = i * chunk_size
+                end = min((i + 1) * chunk_size, len(df))
+                chunk = tfidf_matrix[start:end]
+
+                # Skip empty chunks
+                if chunk.shape[0] == 0:
+                    print(f"Warning: Empty chunk at index {i}, skipping...")
+                    continue
+
+                try:
+                    # Compute cosine similarity for this chunk
+                    cosine_sim[start:end] = cosine_similarity(chunk, tfidf_matrix)
+                except ValueError as e:
+                    print(f"Error in computing cosine similarity for chunk {i}: {e}")
+                    continue
 
             data_loaded = True
             st.success("Data loaded successfully!")
@@ -170,6 +196,7 @@ def load_data():
 
         # Free up memory
         gc.collect()
+        data_loaded = True
 
     return True
 
