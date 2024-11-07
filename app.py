@@ -115,28 +115,32 @@ def load_data():
     global df, cosine_sim, nb_sentiment_model, svm_sentiment_model, vectorizer, vectorizer_svm, data_loaded
 
     if not data_loaded:
-        # Google Drive file IDs
-        google_drive_files = {
-            'new_movies.csv': '18gEjCisVUR5GuFCgyuCR_FFG2LBJDbvR&export=download',
-            'svm_sentiment_model.pkl': '1j7O1sc9k1Law5vYRLZzjTxQL3VrNpEVZ&export=download'
-        }
-
-        # Download files from Google Drive
-        for file_name, file_id in google_drive_files.items():
-            if not os.path.exists(file_name):
-                url = f'https://drive.google.com/uc?id={file_id}'
-                gdown.download(url, file_name, quiet=False)
-
-        # Load the movie dataset
-        df = pd.read_csv('new_movies.csv')
-
-        # Load models and vectorizers
         try:
-            # Load files from Google Drive
+            # Google Drive file IDs
+            google_drive_files = {
+                'new_movies.csv': '18gEjCisVUR5GuFCgyuCR_FFG2LBJDbvR&export=download',
+                'svm_sentiment_model.pkl': '1j7O1sc9k1Law5vYRLZzjTxQL3VrNpEVZ&export=download'
+            }
+
+            # Download files from Google Drive
+            for file_name, file_id in google_drive_files.items():
+                if not os.path.exists(file_name):
+                    url = f'https://drive.google.com/uc?id={file_id}'
+                    gdown.download(url, file_name, quiet=False)
+
+            # Load the movie dataset with specific dtypes and columns
+            df = pd.read_csv('new_movies.csv',
+                             usecols=['id', 'title', 'concat'],
+                             dtype={'id': 'int32', 'title': 'str', 'concat': 'str'})
+
+            # Clean the data
+            df = df.dropna(subset=['concat'])  # Remove rows with NaN in concat
+            df = df.reset_index(drop=True)  # Reset index after dropping rows
+
+            # Load models and vectorizers
             with open('svm_sentiment_model.pkl', 'rb') as f:
                 svm_sentiment_model = pickle.load(f)
 
-            # Load files from GitHub (these should be in the same directory as your script)
             current_dir = Path(__file__).parent
 
             with open(os.path.join(current_dir, 'nb_sentiment_model.pkl'), 'rb') as f:
@@ -148,22 +152,25 @@ def load_data():
             with open(os.path.join(current_dir, 'review_vectorizer_SVM.pkl'), 'rb') as f:
                 vectorizer_svm = pickle.load(f)
 
-        except FileNotFoundError as e:
-            st.error(f"Error loading files: {str(e)}")
-            st.error("Please make sure all required files are present")
-            return
+            # Create TF-IDF matrix
+            tfidf = TfidfVectorizer(stop_words='english')
+            tfidf_matrix = tfidf.fit_transform(df['concat'])
 
-        # Create TF-IDF matrix
-        tfidf = TfidfVectorizer(stop_words='english')
-        tfidf_matrix = tfidf.fit_transform(df['concat'].fillna(''))
+            # Calculate cosine similarity
+            st.info("Calculating similarity matrix... This might take a moment.")
+            cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-        # Calculate cosine similarity
-        cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+            data_loaded = True
+            st.success("Data loaded successfully!")
 
-        data_loaded = True
+        except Exception as e:
+            st.error(f"Error loading data: {str(e)}")
+            return False
 
         # Free up memory
         gc.collect()
+
+    return True
 
 def analyze_review_sentiment(review_text):
     try:
@@ -271,6 +278,11 @@ def get_movie_reviews(movie_id):
 
 
 def main():
+    # Load data first
+    if not load_data():
+        st.error("Failed to load necessary data. Please try again later.")
+        return
+
     load_data()
 
     # Custom CSS
