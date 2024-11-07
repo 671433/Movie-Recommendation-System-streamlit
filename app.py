@@ -194,6 +194,7 @@ def analyze_review_sentiment_by_svm(review_text):
         print(f"Error analyzing sentiment: {e}")
         return 'UNKNOWN'
 
+
 def get_recommendations(title):
     global df, cosine_sim
 
@@ -202,30 +203,34 @@ def get_recommendations(title):
         st.error("Data not loaded properly. Please try again.")
         return []
 
+    # Check if the title exists in the dataframe
     if title not in df['title'].values:
-        return 'Sorry! try another movie name'
+        return 'Sorry! Try another movie name'
 
-    idx = df[df['title'] == title].index[0]
+    # Find the index of the movie that matches the title
+    idx = df.index[df['title'] == title].tolist()
+
+    if not idx:
+        return 'Movie not found in the database'
+
+    idx = idx[0]
 
     try:
-        # Check if cosine_sim is still None
-        if cosine_sim is None:
-            st.error("Cosine similarity matrix is not available.")
-            return []
+        # Get similarity scores
         sim_scores = list(enumerate(cosine_sim[idx]))
         sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-        sim_scores = sim_scores[1:6]  # higher 5 results
+        sim_scores = sim_scores[1:6]  # Get top 5 similar movies
         movie_indices = [i[0] for i in sim_scores]
-        recommended_movies = []
 
+        recommended_movies = []
         for movie_index in movie_indices:
             movie_id = df['title'].iloc[movie_index]
             movie_details = get_movie_details(movie_id)
-
             if movie_details:
                 # Round the rating to one decimal place
                 vote_average = movie_details.get('vote_average', 0)
-                rounded_vote_average = round(vote_average, 1) if isinstance(vote_average, (int, float)) else vote_average
+                rounded_vote_average = round(vote_average, 1) if isinstance(vote_average,
+                                                                            (int, float)) else vote_average
 
                 recommended_movies.append({
                     'title': movie_details.get('title', ''),
@@ -237,14 +242,10 @@ def get_recommendations(title):
                     "vote_count": movie_details.get('vote_count', ''),
                 })
         return recommended_movies
+
     except Exception as e:
         st.error(f"Error generating recommendations: {str(e)}")
         return []
-
-
-
-
-
 
 
 def get_movie_details(movie_name):
