@@ -188,6 +188,13 @@ def analyze_review_sentiment_by_svm(review_text):
         return 'UNKNOWN'
 
 def get_recommendations(title):
+    global df, cosine_sim
+
+    # Check if data is loaded
+    if df is None or cosine_sim is None:
+        st.error("Data not loaded properly. Please try again.")
+        return []
+
     if title not in df['title'].values:
         return 'Sorry! try another movie name'
 
