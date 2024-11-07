@@ -172,6 +172,7 @@ def load_data():
 
     return True
 
+
 def analyze_review_sentiment(review_text):
     try:
         # Transform the review text using the vectorizer
@@ -209,7 +210,7 @@ def get_recommendations(title):
     # Check if data is loaded
     if df is None or cosine_sim is None:
         st.error("Data not loaded properly. Please try again.")
-        return []
+        return 'Data not loaded properly. Please try again.'
 
     # Check if the title exists in the dataframe
     if title not in df['title'].values:
@@ -217,10 +218,8 @@ def get_recommendations(title):
 
     # Find the index of the movie that matches the title
     idx = df.index[df['title'] == title].tolist()
-
     if not idx:
         return 'Movie not found in the database'
-
     idx = idx[0]
 
     try:
@@ -242,18 +241,18 @@ def get_recommendations(title):
 
                 recommended_movies.append({
                     'title': movie_details.get('title', ''),
-                    "poster_path": movie_details.get('poster_path', ''),
-                    "overview": movie_details.get('overview', ''),
-                    "rating": movie_details.get('rating', ''),
-                    "release_date": movie_details.get('release_date', ''),
-                    "vote_average": rounded_vote_average,
-                    "vote_count": movie_details.get('vote_count', ''),
+                    'poster_path': movie_details.get('poster_path', ''),
+                    'overview': movie_details.get('overview', ''),
+                    'rating': movie_details.get('rating', ''),
+                    'release_date': movie_details.get('release_date', ''),
+                    'vote_average': rounded_vote_average,
+                    'vote_count': movie_details.get('vote_count', ''),
                 })
         return recommended_movies
 
     except Exception as e:
         st.error(f"Error generating recommendations: {str(e)}")
-        return []
+        return f"Error generating recommendations: {str(e)}"
 
 
 def get_movie_details(movie_name):
