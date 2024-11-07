@@ -22,6 +22,7 @@ svm_sentiment_model = None
 vectorizer = None
 vectorizer_svm = None
 
+"""""
 def load_data():
     global df, cosine_sim, nb_sentiment_model, svm_sentiment_model, vectorizer, vectorizer_svm, data_loaded
 
@@ -106,6 +107,63 @@ def load_data():
 
         # Set the flag to True to indicate data has been loaded
         data_loaded = True
+        
+"""
+
+
+def load_data():
+    global df, cosine_sim, nb_sentiment_model, svm_sentiment_model, vectorizer, vectorizer_svm, data_loaded
+
+    if not data_loaded:
+        # Google Drive file IDs
+        google_drive_files = {
+            'new_movies.csv': '18gEjCisVUR5GuFCgyuCR_FFG2LBJDbvR&export=download',
+            'svm_sentiment_model.pkl': '1j7O1sc9k1Law5vYRLZzjTxQL3VrNpEVZ&export=download'
+        }
+
+        # Download files from Google Drive
+        for file_name, file_id in google_drive_files.items():
+            if not os.path.exists(file_name):
+                url = f'https://drive.google.com/uc?id={file_id}'
+                gdown.download(url, file_name, quiet=False)
+
+        # Load the movie dataset
+        df = pd.read_csv('new_movies.csv')
+
+        # Load models and vectorizers
+        try:
+            # Load files from Google Drive
+            with open('svm_sentiment_model.pkl', 'rb') as f:
+                svm_sentiment_model = pickle.load(f)
+
+            # Load files from GitHub (these should be in the same directory as your script)
+            current_dir = Path(__file__).parent
+
+            with open(os.path.join(current_dir, 'nb_sentiment_model.pkl'), 'rb') as f:
+                nb_sentiment_model = pickle.load(f)
+
+            with open(os.path.join(current_dir, 'review_vectorizer.pkl'), 'rb') as f:
+                vectorizer = pickle.load(f)
+
+            with open(os.path.join(current_dir, 'review_vectorizer_SVM.pkl'), 'rb') as f:
+                vectorizer_svm = pickle.load(f)
+
+        except FileNotFoundError as e:
+            st.error(f"Error loading files: {str(e)}")
+            st.error("Please make sure all required files are present")
+            return
+
+        # Create TF-IDF matrix
+        tfidf = TfidfVectorizer(stop_words='english')
+        tfidf_matrix = tfidf.fit_transform(df['combined_features'].fillna(''))
+
+        # Calculate cosine similarity
+        cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+
+        data_loaded = True
+
+        # Free up memory
+        gc.collect()
 
 def analyze_review_sentiment(review_text):
     try:
