@@ -143,6 +143,7 @@ def load_data():
 
             current_dir = Path(__file__).parent
 
+
             with open(os.path.join(current_dir, 'nb_sentiment_model.pkl'), 'rb') as f:
                 nb_sentiment_model = pickle.load(f)
 
