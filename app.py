@@ -1,5 +1,7 @@
 import gc
 import os
+from pathlib import Path
+
 import gdown
 import pandas as pd
 import numpy as np
@@ -48,6 +50,29 @@ def load_data():
         # Clean 'concat' column (remove NaN values)
         df = df[df['concat'].notna()]
 
+        # Load models and vectorizers
+        try:
+            # Load files from Google Drive
+            with open('svm_sentiment_model.pkl', 'rb') as f:
+                svm_sentiment_model = pickle.load(f)
+
+            # Load files from GitHub (these should be in the same directory as your script)
+            current_dir = Path(__file__).parent
+
+            with open(os.path.join(current_dir, 'nb_sentiment_model.pkl'), 'rb') as f:
+                nb_sentiment_model = pickle.load(f)
+
+            with open(os.path.join(current_dir, 'review_vectorizer.pkl'), 'rb') as f:
+                vectorizer = pickle.load(f)
+
+            with open(os.path.join(current_dir, 'review_vectorizer_SVM.pkl'), 'rb') as f:
+                vectorizer_svm = pickle.load(f)
+
+        except FileNotFoundError as e:
+            st.error(f"Error loading files: {str(e)}")
+            st.error("Please make sure all required files are present")
+            return
+
         # TF-IDF Vectorization
         tfidf = TfidfVectorizer(analyzer='word', stop_words='english', max_features=5000)
         tfidf_matrix = tfidf.fit_transform(df['concat'])
@@ -75,15 +100,6 @@ def load_data():
                 print(f"Error in computing cosine similarity for chunk {i}: {e}")
                 continue
 
-        # Load models
-        with open('nb_sentiment_model.pkl', 'rb') as f:
-            nb_sentiment_model = pickle.load(f)
-        with open('review_vectorizer.pkl', 'rb') as f:
-            vectorizer = pickle.load(f)
-        with open('svm_sentiment_model.pkl', 'rb') as f:
-            svm_sentiment_model = pickle.load(f)
-        with open('review_vectorizer_SVM.pkl', 'rb') as f:
-            vectorizer_svm = pickle.load(f)
 
         # Clear unnecessary objects to free memory
         gc.collect()
