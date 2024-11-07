@@ -27,10 +27,10 @@ def load_data():
 
     if not data_loaded:
         # URL of the file in Google Drive (for the dataset)
-        file_url_movies = 'https://drive.google.com/uc?id=18gEjCisVUR5GuFCgyuCR_FFG2LBJDbvR&export=download'
+        file_url_movies = 'https://drive.google.com/uc?id=18gEjCisVUR5GuFCgyuCR_FFG2LBJDbvR'
 
         # URL of the file for the svm_sentiment_model.pkl
-        file_url_svm_model = 'https://drive.google.com/uc?id=1j7O1sc9k1Law5vYRLZzjTxQL3VrNpEVZ&export=download'
+        file_url_svm_model = 'https://drive.google.com/uc?id=1j7O1sc9k1Law5vYRLZzjTxQL3VrNpEVZ'
 
         # Use gdown to download the movies dataset
         gdown.download(file_url_movies, 'new_movies.csv', quiet=False)
