@@ -184,14 +184,22 @@ def analyze_review_sentiment(review_text):
         return 'UNKNOWN'
 
 def analyze_review_sentiment_by_svm(review_text):
+    global vectorizer_svm, svm_sentiment_model
+
+    if vectorizer_svm is None or svm_sentiment_model is None:
+        st.warning("Sentiment analysis models not loaded. Attempting to reload...")
+        load_data()
+
     try:
-        # Transform the review text using the vectorizer
+        # Check again after potential reload
+        if vectorizer_svm is None or svm_sentiment_model is None:
+            return 'UNKNOWN'
+
         review_vector = vectorizer_svm.transform([review_text])
-        # Predict sentiment
         prediction = svm_sentiment_model.predict(review_vector)[0]
         return 'POSITIVE' if prediction == 1 else 'NEGATIVE'
     except Exception as e:
-        print(f"Error analyzing sentiment: {e}")
+        st.error(f"Error analyzing sentiment: {e}")
         return 'UNKNOWN'
 
 
