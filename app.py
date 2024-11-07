@@ -155,7 +155,7 @@ def load_data():
 
         # Create TF-IDF matrix
         tfidf = TfidfVectorizer(stop_words='english')
-        tfidf_matrix = tfidf.fit_transform(df['combined_features'].fillna(''))
+        tfidf_matrix = tfidf.fit_transform(df['concat'].fillna(''))
 
         # Calculate cosine similarity
         cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
